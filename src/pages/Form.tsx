@@ -16,8 +16,14 @@ import Crop169Icon from "@mui/icons-material/Crop169";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import PasswordIcon from "@mui/icons-material/Password";
-import { Alert, IconButton } from "@mui/material";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { Alert, IconButton, TextField } from "@mui/material";
+import {
+    DragDropContext,
+    Draggable,
+    DropResult,
+    Droppable,
+} from "react-beautiful-dnd";
+import Modal from "./Modal/Modal";
 
 const drawerWidth = 200;
 const fields: { text: string; icon: JSX.Element }[] = [
@@ -40,20 +46,61 @@ const fields: { text: string; icon: JSX.Element }[] = [
 ];
 
 const dragArr = ["sider", "dropArea"];
-
+interface modalOptions {
+    open: boolean;
+    field: string;
+}
+const initialModalOptions = {
+    open: false,
+    field: "",
+};
+type fieldSet = {
+    [key: string]: string | boolean | number;
+};
+const initialFieldState: fieldSet = {
+    label: "",
+    value: "",
+    required: true,
+    disabled: false,
+    readonly: false,
+    focus: false,
+    placeholder: "",
+};
 const Form = () => {
-    const [open, setOpen] = React.useState(true);
+    const [open, setOpen] = React.useState<boolean>(true);
+    const [modal, setModal] = React.useState<modalOptions>(initialModalOptions);
+    const [allFields, setAllFields] = React.useState<fieldSet[]>([]);
 
-    const updateDrag = (param:any) => {
-      const sourceIndex = param.source.index;
-      // console.log("🚀 ~ file: Form.tsx:49 ~ updateDrag ~ sourceIndex:", sourceIndex)
-      const destIndex = param.destination.index;
-        console.log("🚀 ~ file: Form.tsx:51 ~ updateDrag ~ destIndex:", param)
-        // console.log("dragEnd");
+    const updateDrag = (param: DropResult) => {
+        console.log("PARAM", param);
+        if (
+            param?.source?.droppableId === param?.destination?.droppableId &&
+            param?.source?.droppableId === "dropArea"
+        ) {
+            const sourceIndex = param?.source?.index;
+            const destIndex = param?.destination?.index;
+            const temp = [...allFields];
+            temp.splice(destIndex, 0, temp.splice(sourceIndex, 1)[0]);
+            console.log(sourceIndex, destIndex);
+            if (sourceIndex !== destIndex) {
+                setAllFields([...temp])
+            }
+        } else if (param?.destination?.droppableId === "dropArea") {
+            setModal({
+                open: true,
+                field: param.draggableId,
+            });
+            setOpen(false);
+        }
     };
 
     return (
-        <DragDropContext onDragEnd={(param) => updateDrag(param)}>
+        <DragDropContext onDragEnd={(param: DropResult) => updateDrag(param)}>
+            <Modal
+                modal={modal}
+                setModal={setModal}
+                setAllFields={setAllFields}
+            />
             <Box sx={{ display: "flex" }}>
                 {dragArr.map((cur, i) => (
                     <Droppable droppableId={cur} key={cur}>
@@ -112,7 +159,6 @@ const Form = () => {
                                                         draggableId={field.text}
                                                         index={i}
                                                         key={i}
-                                                        // onDragEnd={calledFun}
                                                     >
                                                         {(provided) => (
                                                             <>
@@ -184,8 +230,61 @@ const Form = () => {
                                             <div
                                                 {...provided.droppableProps}
                                                 ref={provided.innerRef}
+                                                style={{ minHeight: "100vh" }}
                                             >
-                                                drag HERE
+                                                {allFields.length > 0
+                                                    ? allFields?.map(
+                                                          (field, i) => {
+                                                              return (
+                                                                  // <>
+                                                                  <Draggable
+                                                                      draggableId={`${i}`}
+                                                                      index={i}
+                                                                      key={i}
+                                                                  >
+                                                                      {(
+                                                                          provided
+                                                                      ) => (
+                                                                          <div
+                                                                              key={
+                                                                                  i
+                                                                              }
+                                                                              // disablePadding
+                                                                              ref={
+                                                                                  provided.innerRef
+                                                                              }
+                                                                              {...provided.draggableProps}
+                                                                              {...provided.dragHandleProps}
+                                                                          >
+                                                                              <p>
+                                                                                  {
+                                                                                      field?.label
+                                                                                  }
+                                                                                  {field?.required && (
+                                                                                      <span
+                                                                                          style={{
+                                                                                              color: "red",
+                                                                                          }}
+                                                                                      >
+                                                                                          *
+                                                                                      </span>
+                                                                                  )}
+                                                                              </p>
+                                                                              <TextField
+                                                                                  value={
+                                                                                      field?.value as string
+                                                                                  }
+                                                                                  variant="outlined"
+                                                                                  fullWidth
+                                                                              />
+                                                                          </div>
+                                                                      )}
+                                                                  </Draggable>
+                                                                  // </>
+                                                              );
+                                                          }
+                                                      )
+                                                    : "Drag Here"}
                                             </div>
                                         </Box>
                                     </>
