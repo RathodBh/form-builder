@@ -7,8 +7,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import Typography from "@mui/material/Typography";
 import Field from "./Field";
+import FieldSet from "../../modals/FieldSet";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     "& .MuiDialogContent-root": {
@@ -52,27 +52,27 @@ interface ModalOpt {
     open: boolean;
     field: string;
 }
-type fieldSet = {
-    [key: string]: string | boolean | number;
-};
+
 interface Props {
     modal: ModalOpt;
     setModal: React.Dispatch<React.SetStateAction<ModalOpt>>;
-    setAllFields: React.Dispatch<React.SetStateAction<fieldSet[]>>;
+    setAllFields: React.Dispatch<React.SetStateAction<FieldSet[]>>;
 }
-const initialFieldState: fieldSet = {
+const initialFieldState: FieldSet = {
     label: "",
     value: "",
+    values: [""],
     required: true,
     disabled: false,
     readonly: false,
     focus: false,
     placeholder: "",
+    fieldName:"",
+    options:[""]
 };
 
 export default function Modal({ modal, setModal, setAllFields }: Props) {
-    const [fieldVal, setFieldVal] = React.useState<fieldSet>(initialFieldState);
-    // const [allField, setAllFields] = React.useState<fieldSet[]>([initialFieldState]);
+    const [fieldVal, setFieldVal] = React.useState<FieldSet>(initialFieldState);
 
     const handleClose = () => {
         setModal({
@@ -80,9 +80,10 @@ export default function Modal({ modal, setModal, setAllFields }: Props) {
             open: false,
         });
     };
+    
     const addData = () => {
         setAllFields((prev)=>[...prev,fieldVal]);
-        setFieldVal(initialFieldState);
+        setFieldVal({...initialFieldState});
     }
     
     return (
@@ -108,7 +109,7 @@ export default function Modal({ modal, setModal, setAllFields }: Props) {
                         handleClose();
                         addData()
                     }}>
-                        Save changes
+                        Add
                     </Button>
                 </DialogActions>
             </BootstrapDialog>
