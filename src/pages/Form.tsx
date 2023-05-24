@@ -5,23 +5,16 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import { Alert, IconButton } from "@mui/material";
-import {
-    DragDropContext,
-    Draggable,
-    DropResult,
-    Droppable,
-} from "react-beautiful-dnd";
+import { DragDropContext, DropResult, Droppable } from "react-beautiful-dnd";
 import Modal from "./Modal/Modal";
 import SidebarDroppable from "../components/SidebarDroppable";
-import SelectBox from "./Fields/SelectBox";
 import FieldSet from "../modals/FieldSet";
-import TextBox from "./Fields/TextBox";
-import CheckBox from "./Fields/CheckBox";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import DraggableItem from "../components/DraggableItem";
+
 interface ModalOptions {
     open: boolean;
     field: string;
+    index?: number;
 }
 const initialModalOptions = {
     open: false,
@@ -36,6 +29,7 @@ const Form = () => {
     useEffect(() => {
         if (localStorage.getItem("AllFields")) {
             setAllFields(JSON.parse(localStorage.getItem("AllFields") || "[]"));
+            setOpen(false);
         }
     }, []);
 
@@ -57,6 +51,7 @@ const Form = () => {
             }
         } else if (param?.destination?.droppableId === "dropArea") {
             setModal({
+                index: -1,
                 open: true,
                 field: param.draggableId,
             });
@@ -108,96 +103,23 @@ const Form = () => {
                                 >
                                     {allFields.length > 0
                                         ? allFields?.map((field, i) => {
-                                              console.log("Field", field);
                                               return (
                                                   // <>
-                                                  <Draggable
-                                                      draggableId={`${i}`}
-                                                      index={i}
+                                                  <DraggableItem
+                                                      field={field}
+                                                      setAllFields={
+                                                          setAllFields
+                                                      }
+                                                      setModal={setModal}
+                                                      i={i}
                                                       key={i}
-                                                  >
-                                                      {(provided, snapshot) => (
-                                                          <div
-                                                              key={i}
-                                                              className={
-                                                                  "pos-rel"
-                                                              }
-                                                              ref={
-                                                                  provided.innerRef
-                                                              }
-                                                              {...provided.draggableProps}
-                                                              {...provided.dragHandleProps}
-                                                              style={{
-                                                                  ...provided
-                                                                      .draggableProps
-                                                                      .style,
-                                                                  boxShadow:
-                                                                      snapshot.isDragging
-                                                                          ? "0 0 .4rem #666"
-                                                                          : "none",
-
-                                                                  padding:
-                                                                      "10px",
-                                                                  borderRadius:
-                                                                      "6px",
-                                                              }}
-                                                              // style={{ border: "1px solid silver"}}
-                                                          >
-                                                              <div className="pos-abs">
-                                                                  <EditIcon />
-                                                                  <DeleteForeverIcon color="error" />
-                                                              </div>
-                                                              <p>
-                                                                  {field?.label}
-                                                                  {field?.required && (
-                                                                      <span
-                                                                          style={{
-                                                                              color: "red",
-                                                                          }}
-                                                                      >
-                                                                          *
-                                                                      </span>
-                                                                  )}
-                                                              </p>
-                                                              {(field?.fieldName ===
-                                                                  "Text Area" ||
-                                                                  field?.fieldName ===
-                                                                      "Text Field" ||
-                                                                  field?.fieldName ===
-                                                                      "Number" ||
-                                                                  field?.fieldName ===
-                                                                      "Password") && (
-                                                                  <TextBox
-                                                                      field={
-                                                                          field
-                                                                      }
-                                                                  />
-                                                              )}
-
-                                                              {field?.fieldName ===
-                                                                  "Select" && (
-                                                                  <SelectBox
-                                                                      field={
-                                                                          field
-                                                                      }
-                                                                  />
-                                                              )}
-
-                                                              {field?.fieldName ===
-                                                                  "Checkbox" && (
-                                                                  <CheckBox
-                                                                      field={
-                                                                          field
-                                                                      }
-                                                                  />
-                                                              )}
-                                                          </div>
-                                                      )}
-                                                  </Draggable>
+                                                  />
                                                   // </>
                                               );
                                           })
                                         : "Drag Here"}
+                                        
+                                    {provided.placeholder}
                                 </div>
                             </Box>
                         </>
@@ -209,6 +131,7 @@ const Form = () => {
                     modal={modal}
                     setModal={setModal}
                     setAllFields={setAllFields}
+                    allFields={allFields}
                 />
             )}
         </DragDropContext>

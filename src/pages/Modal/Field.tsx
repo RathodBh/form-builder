@@ -17,25 +17,90 @@ import FieldSet from "../../modals/FieldSet";
 import TextBox from "../Fields/TextBox";
 import SimpleBox from "../Fields/SimpleBox";
 import CheckBox from "../Fields/CheckBox";
+import RadioBox from "../Fields/RadioBox";
+import { BtnColors, BtnTypes, BtnVariants } from "../../utils/Constants";
+import Btn from "../../modals/Btn";
 
-type FieldType = {
+interface FieldType {
     field: string;
     fieldVal: FieldSet;
     setFieldVal: React.Dispatch<React.SetStateAction<FieldSet>>;
-};
+}
 
 const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
     const [options, setOptions] = useState<string[]>([]);
     const [multi, setMulti] = useState<string[]>([""]);
+    const [btn, setBtn] = useState<Btn>({
+        variant: "outlined",
+        color: "primary",
+        type: "button",
+    });
 
     useEffect(() => {
-        setFieldVal({
-            ...fieldVal,
-            fieldName: field,
-            values: multi,
-        });
-        console.log("Field", fieldVal);
+           
+            setFieldVal((prev) => {
+                return {
+                    ...prev,
+                    label:
+                        prev?.label === ""
+                            ? field
+                            : field !== prev?.label
+                            ? prev?.label
+                            : field,
+                    fieldName: field,
+                };
+            });
+
+        field === "Button" &&
+            setFieldVal((prev) => {
+                return {
+                    ...prev,
+                    placeholder: btn?.variant,
+                    value: btn?.type,
+                    options: [btn?.color],
+                    fieldName: field,
+                };
+            });
+    }, []);
+
+    useEffect(() => {
+        if (fieldVal)
+            setFieldVal({
+                ...fieldVal,
+                fieldName: field,
+                label: field !== fieldVal?.label ? fieldVal?.label : field,
+                values: multi,
+            });
     }, [multi]);
+
+    useEffect(() => {
+        if (
+            fieldVal?.options &&
+            (fieldVal?.options as string[]).length > 0 &&
+            field !== "Button"
+        ) {
+            setOptions(fieldVal?.options as string[]);
+            setMulti(fieldVal?.values as string[]);
+        }
+        if (field === "Button") {
+            setBtn({
+                variant: fieldVal?.placeholder as
+                    | "outlined"
+                    | "contained"
+                    | "text",
+                color: fieldVal?.options
+                    ? ((fieldVal?.options as string[])[0] as
+                          | "primary"
+                          | "error"
+                          | "info"
+                          | "secondary"
+                          | "success"
+                          | "warning")
+                    : "primary",
+                type: fieldVal?.value as "submit" | "button" | "reset",
+            });
+        }
+    }, [fieldVal?.options]);
 
     const onDefaultChange = (
         e: React.ChangeEvent<HTMLElement> | SelectChangeEvent<unknown>,
@@ -43,9 +108,8 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
     ) => {
         const target = e.target as HTMLInputElement;
 
-        setFieldVal({
-            ...fieldVal,
-            [name]: target?.value,
+        setFieldVal((prev) => {
+            return { ...prev, [name]: target?.value };
         });
 
         name === "value" && setMulti([target?.value]);
@@ -89,8 +153,8 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
         return (
             <>
                 <p>
-                    {fieldVal?.label}
-                    {fieldVal?.required && (
+                    {fieldVal?.fieldName !== "Button" && fieldVal?.label}
+                    {fieldVal?.required && fieldVal?.fieldName !== "Button" && (
                         <span style={{ color: "red" }}>*</span>
                     )}
                 </p>
@@ -105,11 +169,21 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
 
                 {field === "Select" && <SelectBox field={fieldVal} />}
 
-                {(field === "Date" || field === "File") && (
+                {(field === "date" || field === "File") && (
                     <SimpleBox field={fieldVal} />
                 )}
 
                 {field === "Checkbox" && <CheckBox field={fieldVal} />}
+                {field === "Radio" && <RadioBox field={fieldVal} />}
+                {field === "Button" && (
+                    <Button
+                        variant={btn?.variant}
+                        color={btn?.color}
+                        type={btn?.type}
+                    >
+                        {fieldVal?.label}
+                    </Button>
+                )}
             </>
         );
     };
@@ -122,13 +196,31 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
 
         setFieldVal({ ...fieldVal, values: value });
     };
+
+    const updateBtn = (e: SelectChangeEvent<unknown>, type: string) => {
+        setBtn({
+            ...btn,
+            [type]: e.target.value,
+        });
+
+        type === "variant" &&
+            setFieldVal({
+                ...fieldVal,
+                placeholder: e.target?.value as string,
+            });
+        type === "color" &&
+            setFieldVal({ ...fieldVal, options: [e.target?.value as string] });
+        type === "type" &&
+            setFieldVal({ ...fieldVal, value: e.target?.value as string });
+    };
     return (
         <>
             <div style={{ display: "flex" }}>
                 <div style={{ width: "50%" }}>
                     <TextField
-                        label="Label"
+                        label={field === "Button" ? "Text" : "Label"}
                         variant="outlined"
+                        value={fieldVal?.label}
                         onChange={(e) => onDefaultChange(e, "label")}
                         style={{ margin: "10px 0" }}
                         fullWidth
@@ -139,6 +231,7 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
                         field === "Password") && (
                         <TextField
                             label="Default Value"
+                            value={fieldVal?.value}
                             type={field}
                             variant="outlined"
                             onChange={(e) => onDefaultChange(e, "value")}
@@ -149,7 +242,9 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
                         />
                     )}
 
-                    {(field === "Select" || field === "Checkbox") && (
+                    {(field === "Select" ||
+                        field === "Checkbox" ||
+                        field === "Radio") && (
                         <>
                             <fieldset
                                 style={{
@@ -263,11 +358,13 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
 
                     {field !== "Select" &&
                         field !== "Checkbox" &&
-                        field !== "Date" &&
+                        field !== "date" &&
                         field !== "File" &&
-                        field !== "Radio" && (
+                        field !== "Radio" &&
+                        field !== "Button" && (
                             <TextField
                                 label="Placeholder"
+                                value={fieldVal?.placeholder}
                                 variant="outlined"
                                 onChange={(e) =>
                                     onDefaultChange(e, "placeholder")
@@ -277,61 +374,102 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
                             />
                         )}
 
-                    {/* {
-                        (field === "CheckBox") && (
+                    {field === "Button" && (
+                        <>
+                            <div style={{ margin: "15px 0" }}>
+                                <p>Button variant</p>
+                                <Select
+                                    fullWidth
+                                    value={btn?.variant}
+                                    onChange={(e) => updateBtn(e, "variant")}
+                                >
+                                    {BtnVariants?.map((v) => (
+                                        <MenuItem value={v}>{v}</MenuItem>
+                                    ))}
+                                </Select>
+                            </div>
 
-                        )
-                    } */}
+                            <div style={{ margin: "15px 0" }}>
+                                <p>Button color</p>
+                                <Select
+                                    fullWidth
+                                    value={btn?.color}
+                                    onChange={(e) => updateBtn(e, "color")}
+                                >
+                                    {BtnColors?.map((v) => (
+                                        <MenuItem value={v}>{v}</MenuItem>
+                                    ))}
+                                </Select>
+                            </div>
 
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={fieldVal?.required as boolean}
-                                    onChange={(e) =>
-                                        onDefaultValid(e, "required")
-                                    }
-                                    name="required"
-                                />
-                            }
-                            label="Required"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={fieldVal?.readonly as boolean}
-                                    onChange={(e) =>
-                                        onDefaultValid(e, "readonly")
-                                    }
-                                    name="readonly"
-                                />
-                            }
-                            label="Read only"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={fieldVal?.disabled as boolean}
-                                    onChange={(e) =>
-                                        onDefaultValid(e, "disabled")
-                                    }
-                                    name="disabled"
-                                />
-                            }
-                            label="Disabled"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={fieldVal?.focus as boolean}
-                                    onChange={(e) => onDefaultValid(e, "focus")}
-                                    name="focus"
-                                />
-                            }
-                            label="Autofocus"
-                        />
-                    </FormGroup>
+                            <div style={{ margin: "15px 0" }}>
+                                <p>Button type</p>
+                                <Select
+                                    fullWidth
+                                    value={btn?.type}
+                                    onChange={(e) => updateBtn(e, "type")}
+                                >
+                                    {BtnTypes?.map((v) => (
+                                        <MenuItem value={v}>{v}</MenuItem>
+                                    ))}
+                                </Select>
+                            </div>
+                        </>
+                    )}
+                    {field !== "Button" && (
+                        <FormGroup>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={fieldVal?.required as boolean}
+                                        onChange={(e) =>
+                                            onDefaultValid(e, "required")
+                                        }
+                                        name="required"
+                                    />
+                                }
+                                label="Required"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={fieldVal?.readonly as boolean}
+                                        onChange={(e) =>
+                                            onDefaultValid(e, "readonly")
+                                        }
+                                        name="readonly"
+                                    />
+                                }
+                                label="Read only"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={fieldVal?.disabled as boolean}
+                                        onChange={(e) =>
+                                            onDefaultValid(e, "disabled")
+                                        }
+                                        name="disabled"
+                                    />
+                                }
+                                label="Disabled"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={fieldVal?.focus as boolean}
+                                        onChange={(e) =>
+                                            onDefaultValid(e, "focus")
+                                        }
+                                        name="focus"
+                                    />
+                                }
+                                label="Autofocus"
+                            />
+                        </FormGroup>
+                    )}
                 </div>
+
                 <div
                     style={{
                         padding: "10px 20px",
@@ -341,7 +479,6 @@ const Field = ({ field, fieldVal, setFieldVal }: FieldType) => {
                     Preview
                     <div
                         style={{
-                            // background: "rgba(0,0,0,0.1)",
                             border: "1px solid silver",
                             padding: "5px 15px 15px 15px",
                             borderRadius: "12px",

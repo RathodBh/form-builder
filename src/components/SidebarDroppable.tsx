@@ -10,6 +10,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import AdsClickIcon from "@mui/icons-material/AdsClick";
 
 const drawerWidth = 200;
 const fields: { text: string; icon: JSX.Element }[] = [
@@ -34,7 +35,7 @@ const fields: { text: string; icon: JSX.Element }[] = [
         icon: <ArrowDropDownCircleIcon />,
     },
     {
-        text: "Date",
+        text: "date",
         icon: <CalendarMonthIcon />,
     },
     {
@@ -48,6 +49,10 @@ const fields: { text: string; icon: JSX.Element }[] = [
     {
         text: "Radio",
         icon: <RadioButtonCheckedIcon />,
+    },
+    {
+        text: "Button",
+        icon: <AdsClickIcon />,
     },
 ];
 

@@ -2,7 +2,7 @@ import React from "react";
 import FieldSet from "../../modals/FieldSet";
 
 const SimpleBox = ({ field }: { field: FieldSet }) => {
-    console.log(field)
+    console.log("SImple",field)
     return (
         <>
             <input

@@ -1,5 +1,6 @@
 .pos-rel{
     position:relative;
+    border: 1px solid transparent
 }
 .pos-abs{
     display: none;
@@ -9,6 +10,9 @@
     /* transition: all 6s; */
 }
 
+.pos-rel:hover{
+    border: 1px solid gainsboro
+}
 .pos-rel:hover .pos-abs{
     display: block;
 }

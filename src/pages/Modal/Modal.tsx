@@ -1,4 +1,3 @@
-import * as React from "react";
 import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
@@ -9,6 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import Field from "./Field";
 import FieldSet from "../../modals/FieldSet";
+import { useEffect, useState } from "react";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     "& .MuiDialogContent-root": {
@@ -51,11 +51,13 @@ function BootstrapDialogTitle(props: DialogTitleProps) {
 interface ModalOpt {
     open: boolean;
     field: string;
+    index?: number;
 }
 
 interface Props {
     modal: ModalOpt;
     setModal: React.Dispatch<React.SetStateAction<ModalOpt>>;
+    allFields: FieldSet[];
     setAllFields: React.Dispatch<React.SetStateAction<FieldSet[]>>;
 }
 const initialFieldState: FieldSet = {
@@ -67,12 +69,26 @@ const initialFieldState: FieldSet = {
     readonly: false,
     focus: false,
     placeholder: "",
-    fieldName:"",
-    options:[""]
+    fieldName: "",
+    options: [""],
 };
 
-export default function Modal({ modal, setModal, setAllFields }: Props) {
-    const [fieldVal, setFieldVal] = React.useState<FieldSet>(initialFieldState);
+export default function Modal({
+    modal,
+    setModal,
+    allFields,
+    setAllFields,
+}: Props) {
+    const [fieldVal, setFieldVal] = useState<FieldSet>();
+
+    useEffect(() => {
+        if (modal?.index !== -1) {
+            const thisField = allFields?.find((_, i) => i === modal?.index);
+            setFieldVal({ ...thisField });
+        } else {
+            setFieldVal({ ...initialFieldState });
+        }
+    }, [modal]);
 
     const handleClose = () => {
         setModal({
@@ -80,12 +96,19 @@ export default function Modal({ modal, setModal, setAllFields }: Props) {
             open: false,
         });
     };
-    
+
     const addData = () => {
-        setAllFields((prev)=>[...prev,fieldVal]);
-        setFieldVal({...initialFieldState});
-    }
-    
+        if (modal?.index !== -1) {
+            const newArr = allFields?.map((cur, i) => {
+                return i === modal?.index ? { ...fieldVal } : cur;
+            });
+            setAllFields(newArr);
+        } else {
+            setAllFields([...allFields, fieldVal] as FieldSet[]);
+        }
+        setFieldVal({ ...initialFieldState });
+    };
+
     return (
         <div>
             <BootstrapDialog
@@ -99,17 +122,29 @@ export default function Modal({ modal, setModal, setAllFields }: Props) {
                     id="customized-dialog-title"
                     onClose={handleClose}
                 >
+                    {modal?.index !== -1 && "Edit : "}
                     {modal?.field}
                 </BootstrapDialogTitle>
                 <DialogContent dividers>
-                    <Field field={modal?.field} fieldVal={fieldVal} setFieldVal={setFieldVal} />
+                    <Field
+                        field={modal?.field}
+                        fieldVal={fieldVal as FieldSet}
+                        setFieldVal={
+                            setFieldVal as React.Dispatch<
+                                React.SetStateAction<FieldSet>
+                            >
+                        }
+                    />
                 </DialogContent>
                 <DialogActions>
-                    <Button autoFocus onClick={()=>{
-                        handleClose();
-                        addData()
-                    }}>
-                        Add
+                    <Button
+                        autoFocus
+                        onClick={() => {
+                            handleClose();
+                            addData();
+                        }}
+                    >
+                        {modal?.index !== -1 ? "UPDATE" : "ADD"}
                     </Button>
                 </DialogActions>
             </BootstrapDialog>

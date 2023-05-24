@@ -23,7 +23,7 @@ const SelectBox = ({
                     <MenuItem selected disabled value="">
                         <em>-------NONE-------</em>
                     </MenuItem>
-                    {(field?.options as string[]).map((opt, i) => (
+                    {(field?.options as string[])?.map((opt, i) => (
                         <MenuItem value={opt}>{opt}</MenuItem>
                     ))}
                 </Select>
